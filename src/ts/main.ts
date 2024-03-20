@@ -155,3 +155,41 @@ function getStringFromArray(array: string[]) {
 // TEST 6
 
 console.log(getStringFromArray(loremIpsumWords));
+
+/* 
+7. Denna funktion skall kontrollera att en användare är över 20 år och göra någonting.
+    Det finns dock problem med denna typ av funktion. Vad händer när kraven ändras och
+    fler och fler parametrar behöver läggas till? T.ex. avatar eller adress. Hitta en bättre
+    lösning som är hållbar och skalar bättre. 
+*/
+
+interface IUser {
+  birthday: Date;
+  username?: string;
+  email?: number;
+  password?: string;
+  avatar?: string;
+  address?: string;
+}
+
+function createUser(userInfo: IUser) {
+  // Validation
+
+  const START_YEAR_EPOCH = 1970;
+
+  const ageDifferenceMS = Date.now() - userInfo.birthday.getTime();
+  const ageAsDate = new Date(ageDifferenceMS);
+  const userAgeInYears = Math.abs(
+    ageAsDate.getUTCFullYear() - START_YEAR_EPOCH
+  );
+
+  if (userAgeInYears >= 20) {
+    // Logik för att skapa en användare
+  } else {
+    return 'Du är under 20 år';
+  }
+}
+
+// TEST 7
+
+console.log('createUser:', createUser({ birthday: new Date('2004-06-02') }));
