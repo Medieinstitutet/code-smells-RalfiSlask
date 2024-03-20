@@ -154,7 +154,7 @@ function getStringFromArray(array: string[]) {
 
 // TEST 6
 
-console.log(getStringFromArray(loremIpsumWords));
+console.log('string from array:', getStringFromArray(loremIpsumWords));
 
 /* 
 7. Denna funktion skall kontrollera att en användare är över 20 år och göra någonting.
@@ -193,3 +193,66 @@ function createUser(userInfo: IUser) {
 // TEST 7
 
 console.log('createUser:', createUser({ birthday: new Date('2004-06-02') }));
+
+/*
+8. Se om du kan hitta problem med koden nedan och se om du kan göra den bättre.
+*/
+export enum SortByCategory {
+  PRICE_ASCENDING = 'Stigande pris',
+  PRICE_DECENDING = 'Sjunkande pris',
+  NAME_ALPHABETIC = 'Alfabetisk ordning',
+  NAME_ALPHABETIC_REVERSE = 'Omvänd alfabetisk ordning',
+}
+
+export class Product {
+  constructor(
+    public id: number,
+    public name: string,
+    public imageUrl: string[],
+    public price: number,
+    public description: string
+  ) {
+    this.id = id;
+    this.name = name;
+    this.imageUrl = imageUrl;
+    this.price = price;
+    this.description = description;
+  }
+}
+
+export function sortProductsBy(
+  category: SortByCategory,
+  products: Product[]
+): Product[] {
+  // shallow array med spread istället för att pusha in i en ny array
+  return [...products].sort((product1, product2) => {
+    if (category === SortByCategory.PRICE_ASCENDING) {
+      return product1.price - product2.price;
+    } else if (category === SortByCategory.PRICE_DECENDING) {
+      return product2.price - product1.price;
+    } else if (category === SortByCategory.NAME_ALPHABETIC) {
+      // localCompare för strings
+      return product1.name.localeCompare(product2.name);
+    } else if (category === SortByCategory.NAME_ALPHABETIC_REVERSE) {
+      return product2.name.localeCompare(product1.name);
+    }
+    return 0;
+  });
+}
+
+// TEST 8
+
+const JennisProduct = new Product(1, 'Jenni', ['url'], 45, 'tomater');
+const JannesProduct = new Product(2, 'Janne', ['url'], 10345, 'portabel bastu');
+
+const fed23Products = [JennisProduct, JannesProduct];
+
+console.log(
+  'sortera på pris:',
+  sortProductsBy(SortByCategory.PRICE_DECENDING, fed23Products)
+);
+
+console.log(
+  'sortera på nam:',
+  sortProductsBy(SortByCategory.NAME_ALPHABETIC_REVERSE, fed23Products)
+);
