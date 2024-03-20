@@ -220,7 +220,7 @@ export class Product {
   }
 }
 
-export function sortProductsBy(
+export function SortProductsByCategory(
   category: SortByCategory,
   products: Product[]
 ): Product[] {
@@ -244,15 +244,150 @@ export function sortProductsBy(
 
 const JennisProduct = new Product(1, 'Jenni', ['url'], 45, 'tomater');
 const JannesProduct = new Product(2, 'Janne', ['url'], 10345, 'portabel bastu');
+const SebastianProduct = new Product(3, 'Sebastian', ['url'], 999, 'löparskor');
 
-const fed23Products = [JennisProduct, JannesProduct];
+const fed23Products = [JennisProduct, JannesProduct, SebastianProduct];
 
 console.log(
   'sortera på pris:',
-  sortProductsBy(SortByCategory.PRICE_DECENDING, fed23Products)
+  SortProductsByCategory(SortByCategory.PRICE_DECENDING, fed23Products)
 );
 
 console.log(
   'sortera på nam:',
-  sortProductsBy(SortByCategory.NAME_ALPHABETIC_REVERSE, fed23Products)
+  SortProductsByCategory(SortByCategory.NAME_ALPHABETIC_REVERSE, fed23Products)
 );
+
+/*
+  9. Refaktorera funktionen createProductHtml :)
+  */
+class Cart {
+  addToCart(i: number) {}
+}
+
+interface IProduct {
+  name: string;
+  price: string;
+  info: string;
+  productSpec: boolean;
+  pictureSrc: string;
+  pictureAlt: string;
+  category: 'sassy' | 'kriminella' | 'singlar' | 'puppy' | 'oldies';
+}
+
+interface IPicture {
+  pictureSrc: string;
+  pictureAlt: string;
+}
+
+export let cartList = JSON.parse(localStorage.getItem('savedCartList') || '[]');
+export let productList: IProduct[] = JSON.parse(
+  localStorage.getItem('savedList') || '[]'
+);
+
+const getSumOfCartList = (cartList: { quantity: number }[]) => {
+  return cartList.reduce(
+    (prevCartProduct, currentCartProduct) =>
+      prevCartProduct + currentCartProduct.quantity,
+    0
+  );
+};
+
+const createDogImage = (pictureInfo: IPicture) => {
+  const { pictureSrc, pictureAlt } = pictureInfo;
+  let dogImg: HTMLImageElement = document.createElement('img');
+  dogImg.src = pictureSrc;
+  dogImg.alt = pictureAlt;
+  return dogImg;
+};
+
+// skapade en generisk funktion, kanske bör ha mer specifik, men hade två element som hade samma logik
+const createDivElementWithClass = (className: string) => {
+  let divElement: HTMLDivElement = document.createElement('div');
+  divElement.className = className;
+  return divElement;
+};
+
+const createCartSymbol = (className: string) => {
+  const cartSymbol: HTMLElement = document.createElement('i');
+  cartSymbol.className = className;
+  return cartSymbol;
+};
+
+const createHeadings = () => {
+  const nameHeading: HTMLHeadingElement = document.createElement('h5');
+  const priceHeading: HTMLHeadingElement = document.createElement('h5');
+  const infoHeading: HTMLHeadingElement = document.createElement('h5');
+  return { nameHeading, priceHeading, infoHeading };
+};
+
+const createFloatingCart = (quantity: number) => {
+  const floatingCart = document.getElementById(
+    'floatingcartnumber'
+  ) as HTMLElement;
+  floatingCart.textContent = `${quantity}`;
+};
+
+const attachImageEventListeners = (
+  image: HTMLImageElement,
+  product: IProduct
+) => {
+  image.addEventListener('mouseover', () => {
+    image.classList.add('hover');
+  });
+  image.addEventListener('mouseout', () => {
+    image.classList.remove('hover');
+  });
+  image.addEventListener('click', () => {
+    product.productSpec = !product.productSpec;
+    window.location.href = 'product-spec.html#backArrow';
+    localStorage.setItem('savedList', JSON.stringify(productList));
+  });
+};
+
+const attachCartSymbolClickEvent = (cartSymbol: HTMLElement, index: number) => {
+  cartSymbol.addEventListener('click', () => {
+    let cart = new Cart();
+    cart.addToCart(index);
+  });
+};
+
+export function createProductHtml() {
+  const quantity = getSumOfCartList(cartList);
+  createFloatingCart(quantity);
+
+  productList.forEach((product, index) => {
+    let { pictureSrc, name, price, info, pictureAlt, productSpec, category } =
+      product;
+
+    const dogProduct: HTMLDivElement = document.createElement('div');
+    const dogImgContainer = createDivElementWithClass('dogimagecontainer');
+    const cartSymbolContainer = createDivElementWithClass(
+      'cartSymbolContainer'
+    );
+    const cartSymbol = createCartSymbol('bi bi-bag-plus');
+    const pictureInfo = { pictureSrc, pictureAlt };
+    const dogImg = createDogImage(pictureInfo);
+    const categoryContainer = document.getElementById(category) as HTMLElement;
+    const headings = createHeadings();
+
+    const { nameHeading, priceHeading, infoHeading } = headings;
+
+    nameHeading.textContent = name;
+    priceHeading.textContent = `$${price}`;
+    infoHeading.textContent = info;
+
+    dogImgContainer.append(dogImg, cartSymbolContainer);
+    cartSymbolContainer.appendChild(cartSymbol);
+    dogProduct.append(dogImgContainer, nameHeading, priceHeading, infoHeading);
+    categoryContainer.appendChild(dogProduct);
+
+    productSpec = false;
+
+    attachImageEventListeners(dogImg, product);
+    attachCartSymbolClickEvent(cartSymbol, index);
+  });
+
+  localStorage.setItem('savedList', JSON.stringify(productList));
+  sessionStorage.clear();
+}
