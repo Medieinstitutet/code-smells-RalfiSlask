@@ -119,7 +119,8 @@ function generateProductAsHTML(product: IProduct) {
   */
 
 function generateStudentsInListAsHTML(students: Student[]) {
-  const passedList = document.querySelector('ul#passedstudents'); // skulle kunna använda template literals med dynamiskt id?
+  // skulle kunna använda template literals med dynamiskt id, kan sänka läsbarhet?
+  const passedList = document.querySelector('ul#passedstudents');
   const failedList = document.querySelector('ul#failedstudents');
 
   for (const student of students) {
@@ -136,3 +137,21 @@ function generateStudentsInListAsHTML(students: Student[]) {
     }
   }
 }
+
+/*
+  6. Skriv en funktion som skall slå ihop följande texter på ett bra sätt:
+  Lorem, ipsum, dolor, sit, amet
+  Exemplet under löser problemet, men inte speciellt bra. Hur kan man göra istället?
+  */
+
+const loremIpsumWords = ['Lorem', 'ipsum', 'dolor', 'sit', 'amet'];
+
+// Funderade på olika namn här, antingen joinWords eller mer generisk getStringFromArray, i fall den kommer att återanvändas
+
+function getStringFromArray(array: string[]) {
+  return array.join(' ');
+}
+
+// TEST 6
+
+console.log(getStringFromArray(loremIpsumWords));
