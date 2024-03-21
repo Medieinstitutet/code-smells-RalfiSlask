@@ -85,17 +85,17 @@ console.log(
   averageWeeklyTemperatureInStockholm([stockholm])
 );
 
-interface IProduct {
+/*
+  4. Följande funktion kommer att presentera ett objekt i dom:en. 
+  Se om du kan göra det bättre. Inte bara presentationen räknas, även strukturer.
+  */
+
+export interface IProduct {
   name: string;
   price: string;
   image: string;
   parentElement: HTMLElement;
 }
-
-/*
-  4. Följande funktion kommer att presentera ett objekt i dom:en. 
-  Se om du kan göra det bättre. Inte bara presentationen räknas, även strukturer.
-  */
 
 function generateProductAsHTML(product: IProduct) {
   const { name, price, image, parentElement } = product;
@@ -163,7 +163,7 @@ console.log('string from array:', getStringFromArray(loremIpsumWords));
     lösning som är hållbar och skalar bättre. 
 */
 
-interface IUser {
+export interface IUser {
   birthday: Date;
   username?: string;
   email?: number;
@@ -265,7 +265,7 @@ class Cart {
   addToCart(i: number) {}
 }
 
-interface IProduct {
+export interface IProductInfo {
   name: string;
   price: string;
   info: string;
@@ -275,13 +275,21 @@ interface IProduct {
   category: 'sassy' | 'kriminella' | 'singlar' | 'puppy' | 'oldies';
 }
 
-interface IPicture {
+export interface IPicture {
   pictureSrc: string;
   pictureAlt: string;
 }
 
-export let cartList = JSON.parse(localStorage.getItem('savedCartList') || '[]');
-export let productList: IProduct[] = JSON.parse(
+export interface IProductNamePriceInfo {
+  name: string;
+  price: string;
+  info: string;
+}
+
+export const cartList = JSON.parse(
+  localStorage.getItem('savedCartList') || '[]'
+);
+export const productList: IProductInfo[] = JSON.parse(
   localStorage.getItem('savedList') || '[]'
 );
 
@@ -295,7 +303,7 @@ const getSumOfCartList = (cartList: { quantity: number }[]) => {
 
 const createDogImage = (pictureInfo: IPicture) => {
   const { pictureSrc, pictureAlt } = pictureInfo;
-  let dogImg: HTMLImageElement = document.createElement('img');
+  const dogImg: HTMLImageElement = document.createElement('img');
   dogImg.src = pictureSrc;
   dogImg.alt = pictureAlt;
   return dogImg;
@@ -303,7 +311,7 @@ const createDogImage = (pictureInfo: IPicture) => {
 
 // skapade en generisk funktion, kanske bör ha mer specifik, men hade två element som hade samma logik
 const createDivElementWithClass = (className: string) => {
-  let divElement: HTMLDivElement = document.createElement('div');
+  const divElement: HTMLDivElement = document.createElement('div');
   divElement.className = className;
   return divElement;
 };
@@ -314,23 +322,27 @@ const createCartSymbol = (className: string) => {
   return cartSymbol;
 };
 
-const createHeadings = () => {
+const createHeadings = (namePriceInfo: IProductNamePriceInfo) => {
+  const { name, price, info } = namePriceInfo;
   const nameHeading: HTMLHeadingElement = document.createElement('h5');
   const priceHeading: HTMLHeadingElement = document.createElement('h5');
   const infoHeading: HTMLHeadingElement = document.createElement('h5');
+  nameHeading.textContent = name;
+  priceHeading.textContent = `$${price}`;
+  infoHeading.textContent = info;
   return { nameHeading, priceHeading, infoHeading };
 };
 
 const createFloatingCart = (quantity: number) => {
   const floatingCart = document.getElementById(
-    'floatingcartnumber'
+    'floatingCartNumber'
   ) as HTMLElement;
   floatingCart.textContent = `${quantity}`;
 };
 
 const attachImageEventListeners = (
   image: HTMLImageElement,
-  product: IProduct
+  product: IProductInfo
 ) => {
   image.addEventListener('mouseover', () => {
     image.classList.add('hover');
@@ -357,32 +369,35 @@ export function createProductHtml() {
   createFloatingCart(quantity);
 
   productList.forEach((product, index) => {
-    let { pictureSrc, name, price, info, pictureAlt, productSpec, category } =
-      product;
+    const { pictureSrc, name, price, info, pictureAlt, category } = product;
+
+    const namePriceInfo = {
+      name,
+      price,
+      info,
+    };
+
+    const pictureInfo = { pictureSrc, pictureAlt };
 
     const dogProduct: HTMLDivElement = document.createElement('div');
-    const dogImgContainer = createDivElementWithClass('dogimagecontainer');
+    const dogImgContainer = createDivElementWithClass('dogImageContainer');
     const cartSymbolContainer = createDivElementWithClass(
       'cartSymbolContainer'
     );
     const cartSymbol = createCartSymbol('bi bi-bag-plus');
-    const pictureInfo = { pictureSrc, pictureAlt };
+
     const dogImg = createDogImage(pictureInfo);
     const categoryContainer = document.getElementById(category) as HTMLElement;
-    const headings = createHeadings();
+    const headings = createHeadings(namePriceInfo);
 
     const { nameHeading, priceHeading, infoHeading } = headings;
-
-    nameHeading.textContent = name;
-    priceHeading.textContent = `$${price}`;
-    infoHeading.textContent = info;
 
     dogImgContainer.append(dogImg, cartSymbolContainer);
     cartSymbolContainer.appendChild(cartSymbol);
     dogProduct.append(dogImgContainer, nameHeading, priceHeading, infoHeading);
     categoryContainer.appendChild(dogProduct);
 
-    productSpec = false;
+    product.productSpec = false;
 
     attachImageEventListeners(dogImg, product);
     attachCartSymbolClickEvent(cartSymbol, index);
@@ -390,4 +405,144 @@ export function createProductHtml() {
 
   localStorage.setItem('savedList', JSON.stringify(productList));
   sessionStorage.clear();
+}
+
+/*
+  10. Refaktorera funktionen getfromstorage
+  */
+
+// separerar klass och id namn klass namn-namn, id camelCase namnNamn
+
+export interface ICartProduct {
+  name: string;
+  image: string;
+  price: number;
+  amount: number;
+}
+
+export interface IContainers {
+  titleContainer: HTMLTableRowElement;
+  amountContainer: HTMLDivElement;
+  productQuantity: HTMLTableRowElement;
+  checkoutTotal: HTMLTableCellElement;
+}
+
+const createTableElementWithTextAndClass = (
+  className?: string,
+  text?: string
+) => {
+  const tableElement: HTMLTableCellElement = document.createElement('th');
+  if (text) {
+    tableElement.textContent = text;
+  }
+  if (className) {
+    tableElement.className = className;
+  }
+  return tableElement;
+};
+
+const getStoredCartProducts = () => {
+  const storedCartProducts: string = localStorage.getItem('cartArray') || '';
+  const parsedCartProducts: ICartProduct[] = JSON.parse(storedCartProducts);
+  return parsedCartProducts;
+};
+
+const createFontAwesomeIconButton = (
+  iconClassName: string,
+  buttonClassName: string
+) => {
+  const button = document.createElement('button');
+  const awesomeIcon = document.createElement('i');
+  awesomeIcon.className = iconClassName;
+  button.appendChild(awesomeIcon);
+  button.className = buttonClassName;
+  return button;
+};
+
+const getSumOfCartProducts = (cartProducts: ICartProduct[]) => {
+  return cartProducts.reduce((prevProd, currProd) => {
+    return prevProd + currProd.price * currProd.amount;
+  }, 0);
+};
+
+const generateProductHTML = (
+  cartProduct: ICartProduct,
+  containers: IContainers
+) => {
+  const { name, amount } = cartProduct;
+  const { titleContainer, amountContainer, productQuantity } = containers;
+  const product = createTableElementWithTextAndClass(name, 'product');
+  const cartProductsAmount = createTableElementWithTextAndClass(
+    `x${amount}`,
+    'amount'
+  );
+  const amountQuantity = createTableElementWithTextAndClass(
+    undefined,
+    'amount-quantity'
+  );
+  const amountPlusButton = createFontAwesomeIconButton(
+    'fas fa-plus',
+    'plus-button'
+  );
+  const amountMinusButton = createFontAwesomeIconButton(
+    'fas fa-minus',
+    'minus-button'
+  );
+
+  titleContainer.appendChild(product);
+  amountContainer.append(
+    cartProductsAmount,
+    amountPlusButton,
+    amountMinusButton
+  );
+  productQuantity.appendChild(amountQuantity);
+};
+
+const createContainers = () => {
+  const amountContainer = document.getElementById(
+    'amountCheckoutContainer'
+  ) as HTMLDivElement;
+  const titleContainer = document.getElementById(
+    'titleContainer'
+  ) as HTMLTableRowElement;
+  const productQuantity = document.getElementById(
+    'productQuantity'
+  ) as HTMLTableRowElement;
+  const checkoutTotal = document.getElementById(
+    'titleTotal'
+  ) as HTMLTableCellElement;
+  const strong = document.createElement('strong');
+
+  strong.textContent = 'products:';
+
+  titleContainer.appendChild(strong);
+  return { amountContainer, titleContainer, productQuantity, checkoutTotal };
+};
+
+const appendContainers = (containers: IContainers) => {
+  const { amountContainer, productQuantity, checkoutTotal } = containers;
+  const amountTable = createTableElementWithTextAndClass('amount:');
+  const quantityText = createTableElementWithTextAndClass('change quantity:');
+  const totalText = createTableElementWithTextAndClass('total:');
+
+  amountContainer.appendChild(amountTable);
+  productQuantity.appendChild(quantityText);
+  checkoutTotal.appendChild(totalText);
+};
+
+function updateCartDisplay() {
+  const cartProducts = getStoredCartProducts();
+  const containers = createContainers();
+  appendContainers(containers);
+
+  cartProducts.forEach((cartProduct) => {
+    generateProductHTML(cartProduct, containers);
+  });
+
+  const sumOfCartProducts = getSumOfCartProducts(cartProducts);
+  const totalPrice = createTableElementWithTextAndClass(
+    `${sumOfCartProducts}$`,
+    'totalPriceCenter'
+  );
+  containers.checkoutTotal.appendChild(totalPrice);
 }
