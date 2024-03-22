@@ -26,7 +26,7 @@ class Student {
   ) {}
 }
 
-function getStudentGradeBasedOnHandedInTime(student: Student): string {
+function getStudentGradeBasedOnTime(student: Student): string {
   student.passed = student.name === 'Sebastian' && student.handedInOnTime;
 
   return student.passed ? 'VG' : 'IG';
@@ -36,7 +36,7 @@ function getStudentGradeBasedOnHandedInTime(student: Student): string {
 
 const sebastian = new Student('Sebastian', true, false);
 
-console.log('student grades:', getStudentGradeBasedOnHandedInTime(sebastian));
+console.log('student grades:', getStudentGradeBasedOnTime(sebastian));
 
 /*
   3. Variabelnamn är viktiga. Kika igenom följande kod och gör om och rätt.
@@ -97,7 +97,7 @@ export interface IProduct {
   parentElement: HTMLElement;
 }
 
-function generateProductAsHTML(product: IProduct) {
+function renderProductAsHTML(product: IProduct) {
   const { name, price, image, parentElement } = product;
 
   const productContainer = document.createElement('div');
@@ -106,8 +106,8 @@ function generateProductAsHTML(product: IProduct) {
   const productImage = document.createElement('img');
 
   productTitle.textContent = name;
-  productImage.src = image;
   productPrice.textContent = price.toString();
+  productImage.src = image;
 
   productContainer.append(productTitle, productImage, productPrice);
   parentElement.appendChild(productContainer);
@@ -118,7 +118,7 @@ function generateProductAsHTML(product: IProduct) {
   går att göra betydligt bättre. Gör om så många som du kan hitta!
   */
 
-function generateStudentsInListAsHTML(students: Student[]) {
+function renderStudents(students: Student[]) {
   // skulle kunna använda template literals med dynamiskt id, kan sänka läsbarhet?
   const passedList = document.querySelector('ul#passedstudents');
   const failedList = document.querySelector('ul#failedstudents');
@@ -146,7 +146,7 @@ function generateStudentsInListAsHTML(students: Student[]) {
 
 const loremIpsumWords = ['Lorem', 'ipsum', 'dolor', 'sit', 'amet'];
 
-// Funderade på olika namn här, antingen joinWords eller mer generisk getStringFromArray, i fall den kommer att återanvändas
+// Funderade på olika namn här, antingen joinWords eller mer generisk getStringFromArray i fall den kommer att återanvändas
 
 function getStringFromArray(array: string[]) {
   return array.join(' ');
@@ -166,27 +166,26 @@ console.log('string from array:', getStringFromArray(loremIpsumWords));
 export interface IUser {
   birthday: Date;
   username?: string;
-  email?: number;
+  email?: string;
   password?: string;
   avatar?: string;
   address?: string;
 }
 
 function createUser(userInfo: IUser) {
-  // Validation
-
   const START_YEAR_EPOCH = 1970;
 
+  // Validation
   const ageDifferenceMS = Date.now() - userInfo.birthday.getTime();
   const ageAsDate = new Date(ageDifferenceMS);
   const userAgeInYears = Math.abs(
     ageAsDate.getUTCFullYear() - START_YEAR_EPOCH
   );
 
-  if (userAgeInYears >= 20) {
-    // Logik för att skapa en användare
-  } else {
+  if (userAgeInYears < 20) {
     return 'Du är under 20 år';
+  } else {
+    // Logik för att skapa en användare
   }
 }
 
@@ -199,7 +198,7 @@ console.log('createUser:', createUser({ birthday: new Date('2004-06-02') }));
 */
 export enum SortByCategory {
   PRICE_ASCENDING = 'Stigande pris',
-  PRICE_DECENDING = 'Sjunkande pris',
+  PRICE_DESCENDING = 'Sjunkande pris',
   NAME_ALPHABETIC = 'Alfabetisk ordning',
   NAME_ALPHABETIC_REVERSE = 'Omvänd alfabetisk ordning',
 }
@@ -226,17 +225,18 @@ export function SortProductsByCategory(
 ): Product[] {
   // shallow array med spread istället för att pusha in i en ny array
   return [...products].sort((product1, product2) => {
-    if (category === SortByCategory.PRICE_ASCENDING) {
-      return product1.price - product2.price;
-    } else if (category === SortByCategory.PRICE_DECENDING) {
-      return product2.price - product1.price;
-    } else if (category === SortByCategory.NAME_ALPHABETIC) {
-      // localCompare för strings
-      return product1.name.localeCompare(product2.name);
-    } else if (category === SortByCategory.NAME_ALPHABETIC_REVERSE) {
-      return product2.name.localeCompare(product1.name);
+    switch (category) {
+      case SortByCategory.PRICE_ASCENDING:
+        return product1.price - product2.price;
+      case SortByCategory.PRICE_DESCENDING:
+        return product2.price - product1.price;
+      case SortByCategory.NAME_ALPHABETIC:
+        return product1.name.localeCompare(product2.name);
+      case SortByCategory.NAME_ALPHABETIC_REVERSE:
+        return product2.name.localeCompare(product1.name);
+      default:
+        return 0;
     }
-    return 0;
   });
 }
 
@@ -250,7 +250,7 @@ const fed23Products = [JennisProduct, JannesProduct, SebastianProduct];
 
 console.log(
   'sortera på pris:',
-  SortProductsByCategory(SortByCategory.PRICE_DECENDING, fed23Products)
+  SortProductsByCategory(SortByCategory.PRICE_DESCENDING, fed23Products)
 );
 
 console.log(
@@ -265,25 +265,20 @@ class Cart {
   addToCart(i: number) {}
 }
 
-export interface IProductInfo {
-  name: string;
-  price: string;
-  info: string;
-  productSpec: boolean;
-  pictureSrc: string;
-  pictureAlt: string;
-  category: 'sassy' | 'kriminella' | 'singlar' | 'puppy' | 'oldies';
-}
-
 export interface IPicture {
   pictureSrc: string;
   pictureAlt: string;
 }
 
-export interface IProductNamePriceInfo {
+export interface IProductDetails {
   name: string;
   price: string;
   info: string;
+}
+
+export interface IProductInfo extends IProductDetails, IPicture {
+  productSpec: boolean;
+  category: 'sassy' | 'kriminella' | 'singlar' | 'puppy' | 'oldies';
 }
 
 export const cartList = JSON.parse(
@@ -304,6 +299,8 @@ const getSumOfCartList = (cartList: { quantity: number }[]) => {
 const createDogImage = (pictureInfo: IPicture) => {
   const { pictureSrc, pictureAlt } = pictureInfo;
   const dogImg: HTMLImageElement = document.createElement('img');
+  // adding id
+  dogImg.id = 'dogImage';
   dogImg.src = pictureSrc;
   dogImg.alt = pictureAlt;
   return dogImg;
@@ -319,10 +316,11 @@ const createDivElementWithClass = (className: string) => {
 const createCartSymbol = (className: string) => {
   const cartSymbol: HTMLElement = document.createElement('i');
   cartSymbol.className = className;
+  cartSymbol.id = 'cartSymbol';
   return cartSymbol;
 };
 
-const createHeadings = (namePriceInfo: IProductNamePriceInfo) => {
+const createHeadings = (namePriceInfo: IProductDetails) => {
   const { name, price, info } = namePriceInfo;
   const nameHeading: HTMLHeadingElement = document.createElement('h5');
   const priceHeading: HTMLHeadingElement = document.createElement('h5');
@@ -340,31 +338,44 @@ const createFloatingCart = (quantity: number) => {
   floatingCart.textContent = `${quantity}`;
 };
 
-const attachImageEventListeners = (
-  image: HTMLImageElement,
-  product: IProductInfo
+// Using event delegation instead
+const attachEventListeners = (
+  imageContainer: HTMLDivElement,
+  product: IProductInfo,
+  index: number
 ) => {
-  image.addEventListener('mouseover', () => {
-    image.classList.add('hover');
+  imageContainer.addEventListener('mouseover', (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.id === 'dogImage') {
+      target.classList.add('hover');
+    }
   });
-  image.addEventListener('mouseout', () => {
-    image.classList.remove('hover');
+  imageContainer.addEventListener('mouseout', (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.id === 'dogImage') {
+      target.classList.remove('hover');
+    }
   });
-  image.addEventListener('click', () => {
-    product.productSpec = !product.productSpec;
-    window.location.href = 'product-spec.html#backArrow';
-    localStorage.setItem('savedList', JSON.stringify(productList));
+
+  imageContainer.addEventListener('click', (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.id === 'dogImage') {
+      product.productSpec = !product.productSpec;
+      window.location.href = 'product-spec.html#backArrow';
+      localStorage.setItem('savedList', JSON.stringify(productList));
+    }
+  });
+
+  imageContainer.addEventListener('click', (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.id === 'cartSymbol') {
+      let cart = new Cart();
+      cart.addToCart(index);
+    }
   });
 };
 
-const attachCartSymbolClickEvent = (cartSymbol: HTMLElement, index: number) => {
-  cartSymbol.addEventListener('click', () => {
-    let cart = new Cart();
-    cart.addToCart(index);
-  });
-};
-
-export function createProductHtml() {
+export function renderProducts() {
   const quantity = getSumOfCartList(cartList);
   createFloatingCart(quantity);
 
@@ -399,8 +410,7 @@ export function createProductHtml() {
 
     product.productSpec = false;
 
-    attachImageEventListeners(dogImg, product);
-    attachCartSymbolClickEvent(cartSymbol, index);
+    attachEventListeners(dogImgContainer, product, index);
   });
 
   localStorage.setItem('savedList', JSON.stringify(productList));
@@ -465,10 +475,7 @@ const getSumOfCartProducts = (cartProducts: ICartProduct[]) => {
   }, 0);
 };
 
-const generateProductHTML = (
-  cartProduct: ICartProduct,
-  containers: IContainers
-) => {
+const renderProduct = (cartProduct: ICartProduct, containers: IContainers) => {
   const { name, amount } = cartProduct;
   const { titleContainer, amountContainer, productQuantity } = containers;
   const product = createTableElementWithTextAndClass(name, 'product');
@@ -531,12 +538,12 @@ const appendContainers = (containers: IContainers) => {
 };
 
 function updateCartDisplay() {
-  const cartProducts = getStoredCartProducts();
   const containers = createContainers();
   appendContainers(containers);
 
+  const cartProducts = getStoredCartProducts();
   cartProducts.forEach((cartProduct) => {
-    generateProductHTML(cartProduct, containers);
+    renderProduct(cartProduct, containers);
   });
 
   const sumOfCartProducts = getSumOfCartProducts(cartProducts);
